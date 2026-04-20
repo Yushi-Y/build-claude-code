@@ -77,7 +77,7 @@ def run_bash(command: str) -> str:
         return f"Error: {e}"
 
 
-# -- The core pattern: a while loop that calls tools until the model stops --
+# -- The core pattern: a while loop that calls tools until THE MODEL stops --
 def agent_loop(messages: list):
     while True:
         response = client.messages.create(
@@ -97,12 +97,12 @@ def agent_loop(messages: list):
                 output = run_bash(block.input["command"])
                 print(output[:200])
                 results.append({"type": "tool_result", "tool_use_id": block.id,
-                                "content": output})
+                                "content": output}) # append tool outputs
         messages.append({"role": "user", "content": results})
 
 
 if __name__ == "__main__":
-    history = []
+    history = [] # list that holds entire conversation - grows forever with while loop
     while True:
         try:
             query = input("\033[36ms01 >> \033[0m")
@@ -111,10 +111,10 @@ if __name__ == "__main__":
         if query.strip().lower() in ("q", "exit", ""):
             break
         history.append({"role": "user", "content": query})
-        agent_loop(history)
-        response_content = history[-1]["content"]
+        agent_loop(history) # all assistant response and tool calll results in history list
+        response_content = history[-1]["content"] # assistant's final message
         if isinstance(response_content, list):
             for block in response_content:
-                if hasattr(block, "text"):
+                if hasattr(block, "text"): # only print text answer not tool call block answer
                     print(block.text)
         print()
