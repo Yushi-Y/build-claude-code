@@ -1,3 +1,9 @@
+# Build Claude Code
+
+> **Personal Project** — Built a nano Claude Code-style agent harness from scratch: multi-turn agent loop, tool use, subagents, context compression, task systems, background tasks, and autonomous agent teams. Based on the learning resource by [Share AI](https://github.com/shareai-org/learn-claude-code).
+
+---
+
 [English](./README.md) | [中文](./README-zh.md) | [日本語](./README-ja.md)
 # Learn Claude Code -- Harness Engineering for Real Agents
 
