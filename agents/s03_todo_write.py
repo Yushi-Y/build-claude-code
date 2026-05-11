@@ -187,6 +187,7 @@ def agent_loop(messages: list):
                 if block.name == "todo":
                     used_todo = True
         rounds_since_todo = 0 if used_todo else rounds_since_todo + 1
+        # text injection as reminder
         if rounds_since_todo >= 3:
             results.append({"type": "text", "text": "<reminder>Update your todos.</reminder>"})
         messages.append({"role": "user", "content": results})
