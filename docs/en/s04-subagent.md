@@ -73,6 +73,22 @@ def run_subagent(prompt: str) -> str:
 
 The child's entire message history (possibly 30+ tool calls) is discarded. The parent receives a one-paragraph summary as a normal `tool_result`.
 
+## Parent vs subagent loop
+
+Both loops share the same skeleton — call the model, append assistant content, dispatch tools, append tool_results, repeat. They differ in seven places:
+
+| Aspect            | Parent `agent_loop`                                       | Child `run_subagent`                                          |
+| ----------------- | --------------------------------------------------------- | ------------------------------------------------------------- |
+| Termination       | `while True` — unbounded                                  | `for _ in range(30)` — hard safety cap                        |
+| System prompt     | `SYSTEM` ("…use the task tool to delegate…")              | `SUBAGENT_SYSTEM` ("…complete the task, then summarize…")     |
+| Tools             | `PARENT_TOOLS` (4 base + `task`)                          | `CHILD_TOOLS` (4 base only — no `task`, so no recursion)      |
+| Special dispatch  | Branches on `block.name == "task"` → calls `run_subagent` | No special case — every tool goes through `TOOL_HANDLERS`     |
+| Return            | Returns `None`; side-effects on `messages`                | Returns the final turn's text as a string                     |
+| Truncation        | No truncation on tool_result content                      | `str(output)[:50000]` — caps result size                      |
+| Observability     | `print(f"> task ({desc}): ...")` for visibility           | Silent                                                        |
+
+The subagent isn't a different kind of agent — it's the same loop run in a sealed scope, with one fewer tool and a different return convention. Isolation comes entirely from `sub_messages` being a function-local variable that goes out of scope on return.
+
 ## What Changed From s03
 
 | Component      | Before (s03)     | After (s04)               |

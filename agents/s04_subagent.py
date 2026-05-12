@@ -114,7 +114,7 @@ CHILD_TOOLS = [
 ]
 
 
-# -- Subagent: fresh context, filtered tools, summary-only return --
+# -- Subagent (while loop): fresh context, filtered tools, summary-only return --
 def run_subagent(prompt: str) -> str:
     sub_messages = [{"role": "user", "content": prompt}]  # fresh context
     for _ in range(30):  # safety limit
@@ -132,7 +132,9 @@ def run_subagent(prompt: str) -> str:
                 output = handler(**block.input) if handler else f"Unknown tool: {block.name}"
                 results.append({"type": "tool_result", "tool_use_id": block.id, "content": str(output)[:50000]})
         sub_messages.append({"role": "user", "content": results})
-    # Only the final text returns to the parent -- child context is discarded
+    # Here it creates the boundary between the child's context and the parent
+    # messages and sub_messages are two distinct list objects in memory. The child never touches the parent's list; the parent never touches the child's list. 
+    # Only the final response text returns to the parent -- child context is discarded
     return "".join(b.text for b in response.content if hasattr(b, "text")) or "(no summary)"
 
 
@@ -155,6 +157,7 @@ def agent_loop(messages: list):
         results = []
         for block in response.content:
             if block.type == "tool_use":
+                # decide to call subagents - then separate context
                 if block.name == "task":
                     desc = block.input.get("description", "subtask")
                     prompt = block.input.get("prompt", "")
